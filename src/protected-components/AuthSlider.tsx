@@ -34,7 +34,7 @@ const AuthSlider: React.FC<Props> = ({ items }) => {
           gap={2}
           textAlign="center"
         >
-          <Typography variant="h1" color="#000">
+          <Typography variant="h5" color="#000">
             {item.title}
           </Typography>
           <Typography variant="body1" color="#000" fontWeight={600}>

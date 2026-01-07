@@ -4,11 +4,11 @@ import { ReactElement } from "react";
 // material-ui
 import { useTheme } from "@mui/material/styles";
 import { Box } from "@mui/material";
+import RegisterImage from "../../public/RegisterImage.jpg";
 
 // assets
-const authPattern = "/assets/images/auth/RegisterImage.jpg";
-
-const authRegisterPattern = "/assets/images/auth/RegisterImage.jpg";
+const authPattern = "/RegisterImage.jpg"; // use string path
+const authRegisterPattern = "/RegisterImage.jpg";
 
 // ===========================|| BACKGROUND GRID PATTERN 1 ||=========================== //
 
@@ -40,16 +40,14 @@ const BackgroundPattern = ({ pageType, children }: BackgroundPatternProps) => {
   console.log("🚀 ~ authPattern:", `url(${backgroundPatternMap[pageType]})`);
   return (
     <Box
-      component="span"
+      component="div"
       sx={{
         display: "flex",
         minHeight: "100vh",
-        bgcolor: "#fff",
         backgroundImage: `url(${backgroundPatternMap[pageType]})`,
-        position: "absolute",
         backgroundSize: "cover",
-        overflow: "hidden",
-        m: "0 0 0 auto",
+        backgroundPosition: "center",
+        position: "absolute",
         top: 0,
         left: 0,
         right: 0,

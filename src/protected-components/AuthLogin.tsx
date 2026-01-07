@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import axios from "axios";
+import { signIn } from "next-auth/react";
 import {
   Box,
   Stack,
@@ -24,6 +25,7 @@ import {
   Alert,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useRouter } from "next/navigation";
 
 export enum Gender {
   MALE = "male",
@@ -42,9 +44,10 @@ interface RegisterFormInputs {
   terms: boolean;
 }
 
-const AuthRegister = () => {
+const AuthLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const router = useRouter();
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -70,22 +73,23 @@ const AuthRegister = () => {
   };
 
   const onSubmit: SubmitHandler<RegisterFormInputs> = async (data) => {
-    const { confirmPassword, ...payload } = data;
-    try {
-      const response = await axios.post(
-        "http://localhost:3002/auth/register",
-        payload
-      );
+    const res = await signIn("credentials", {
+      redirect: false, // important for client-side handling
+      email: data.email,
+      password: data.password,
+    });
+
+    if (res?.ok) {
       setSnackbar({
         open: true,
-        message: "Registration successful!",
+        message: "Login successful!",
         severity: "success",
       });
-      reset();
-    } catch (error: any) {
+      router.push("/"); // redirect after login
+    } else {
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || error.message,
+        message: res?.error || "Login failed",
         severity: "error",
       });
     }
@@ -110,35 +114,11 @@ const AuthRegister = () => {
       }}
     >
       <Typography variant="h5" fontWeight={600} mb={3} textAlign={"center"}>
-        Register
+        Login
       </Typography>
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack spacing={3}>
-          <TextField
-            label="Name"
-            fullWidth
-            {...register("name", { required: "Name is required" })}
-            error={!!errors.name}
-            helperText={errors.name?.message}
-          />
-
-          <TextField
-            label="Phone"
-            fullWidth
-            {...register("phone", { required: "Phone is required" })}
-            error={!!errors.phone}
-            helperText={errors.phone?.message}
-          />
-
-          <TextField
-            label="Address"
-            fullWidth
-            {...register("address", { required: "Address is required" })}
-            error={!!errors.address}
-            helperText={errors.address?.message}
-          />
-
           <TextField
             label="Email"
             type="email"
@@ -201,65 +181,6 @@ const AuthRegister = () => {
           </Box>
 
           {/* Confirm Password Field */}
-          <TextField
-            label="Confirm Password"
-            type={showConfirmPassword ? "text" : "password"}
-            fullWidth
-            {...register("confirmPassword", {
-              required: "Confirm password is required",
-              validate: (value) =>
-                value === password || "Passwords do not match",
-            })}
-            error={!!errors.confirmPassword}
-            helperText={errors.confirmPassword?.message}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    edge="end"
-                  >
-                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-
-          <FormControl fullWidth error={!!errors.gender}>
-            <InputLabel>Gender</InputLabel>
-            <Controller
-              name="gender"
-              control={control}
-              rules={{ required: "Gender is required" }}
-              render={({ field }) => (
-                <Select {...field} label="Gender">
-                  <MenuItem value="">
-                    <em>Select gender</em>
-                  </MenuItem>
-                  <MenuItem value={Gender.MALE}>Male</MenuItem>
-                  <MenuItem value={Gender.FEMALE}>Female</MenuItem>
-                  <MenuItem value={Gender.OTHER}>Other</MenuItem>
-                </Select>
-              )}
-            />
-            <FormHelperText>{errors.gender?.message}</FormHelperText>
-          </FormControl>
-
-          <FormControl error={!!errors.terms}>
-            <Controller
-              name="terms"
-              control={control}
-              rules={{ required: "You must accept terms and conditions" }}
-              render={({ field }) => (
-                <FormControlLabel
-                  control={<Checkbox {...field} checked={field.value} />}
-                  label="I accept the terms and conditions"
-                />
-              )}
-            />
-            <FormHelperText>{errors.terms?.message}</FormHelperText>
-          </FormControl>
 
           <Button
             type="submit"
@@ -269,7 +190,7 @@ const AuthRegister = () => {
             disabled={isSubmitting}
             startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
           >
-            {isSubmitting ? "Submitting..." : "Register"}
+            {isSubmitting ? "Submitting..." : "Login"}
           </Button>
         </Stack>
       </form>
@@ -293,4 +214,4 @@ const AuthRegister = () => {
   );
 };
 
-export default AuthRegister;
+export default AuthLogin;
