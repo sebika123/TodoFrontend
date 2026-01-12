@@ -20,7 +20,7 @@ const RegisterPage = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          bgcolor: "background.default",
+          bgcolor: "grey.300",
           p: { xs: 4, md: 8 },
         }}
       >

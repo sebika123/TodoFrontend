@@ -94,7 +94,7 @@ const AuthRegister = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
-  const strength = getPasswordStrength(password);
+  const strength = password ? getPasswordStrength(password) : null;
 
   return (
     <Box
@@ -105,14 +105,13 @@ const AuthRegister = () => {
         p: 4,
         border: 1,
         borderColor: "grey.300",
+        backgroundColor: "background.paper",
         borderRadius: 2,
-        boxShadow: 2,
       }}
     >
       <Typography variant="h5" fontWeight={600} mb={3} textAlign={"center"}>
         Register
       </Typography>
-
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack spacing={3}>
           <TextField
@@ -178,21 +177,24 @@ const AuthRegister = () => {
                 ),
               }}
             />
-            <Box sx={{ mt: 1 }}>
-              <LinearProgress
-                variant="determinate"
-                value={strength.value}
-                color={strength.color as "error" | "warning" | "success"}
-                sx={{ height: 8, borderRadius: 5 }}
-              />
-              <Typography
-                variant="body2"
-                color={`${strength.color}.main`}
-                mt={0.5}
-              >
-                {strength.label}
-              </Typography>
-            </Box>
+            {strength && (
+              <Box sx={{ mt: 1 }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={strength.value}
+                  color={strength.color as "error" | "warning" | "success"}
+                  sx={{ height: 8, borderRadius: 5 }}
+                />
+                <Typography
+                  variant="body2"
+                  color={`${strength.color}.main`}
+                  mt={0.5}
+                >
+                  {strength.label}
+                </Typography>
+              </Box>
+            )}
+
             {errors.password && (
               <Typography variant="body2" color="error">
                 {errors.password.message}

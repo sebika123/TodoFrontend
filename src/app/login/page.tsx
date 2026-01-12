@@ -21,7 +21,7 @@ const LoginPage = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          bgcolor: "background.default",
+          bgcolor: "grey.300",
           p: { xs: 4, md: 8 },
         }}
       >
@@ -75,7 +75,7 @@ const LoginPage = () => {
           sx={{
             position: "absolute",
             inset: 0,
-            backgroundImage: 'url("/RegisterImage.jpg")',
+            backgroundImage: 'url("/login.jpeg")',
             backgroundSize: "cover",
             backgroundPosition: "center",
             filter: "brightness(0.85)",
