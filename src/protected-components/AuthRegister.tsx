@@ -24,6 +24,7 @@ import {
   Alert,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import OtpVerification from "@/app/otp-verification/page";
 
 export enum Gender {
   MALE = "male",
@@ -45,11 +46,14 @@ interface RegisterFormInputs {
 const AuthRegister = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showOtpVerification, setShowOtpVerification] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
     severity: "success" | "error";
   }>({ open: false, message: "", severity: "success" });
+
   const {
     register,
     handleSubmit,
@@ -57,6 +61,7 @@ const AuthRegister = () => {
     watch,
     formState: { errors, isSubmitting },
     reset,
+    getValues,
   } = useForm<RegisterFormInputs>();
 
   const password = watch("password", "");
@@ -76,12 +81,16 @@ const AuthRegister = () => {
         "http://localhost:3002/auth/register",
         payload
       );
+
+      // Store email and show OTP verification
+      setRegisteredEmail(data.email);
+      setShowOtpVerification(true);
+
       setSnackbar({
         open: true,
-        message: "Registration successful!",
+        message: "Registration successful! Please verify your email.",
         severity: "success",
       });
-      reset();
     } catch (error: any) {
       setSnackbar({
         open: true,
@@ -90,11 +99,43 @@ const AuthRegister = () => {
       });
     }
   };
+
+  const handleOtpVerified = () => {
+    // Reset form and show success message
+    reset();
+    setShowOtpVerification(false);
+    setSnackbar({
+      open: true,
+      message: "Email verified successfully! You can now login.",
+      severity: "success",
+    });
+  };
+
+  const handleCancelOtp = () => {
+    setShowOtpVerification(false);
+    setSnackbar({
+      open: true,
+      message: "Verification cancelled. Please verify your email later.",
+      severity: "error",
+    });
+  };
+
   const handleCloseSnackbar = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
   const strength = password ? getPasswordStrength(password) : null;
+
+  // Show OTP verification screen if needed
+  if (showOtpVerification) {
+    return (
+      <OtpVerification
+        email={registeredEmail}
+        onVerified={handleOtpVerified}
+        onCancel={handleCancelOtp}
+      />
+    );
+  }
 
   return (
     <Box
