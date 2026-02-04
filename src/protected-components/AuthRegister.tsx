@@ -25,6 +25,7 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import OtpVerification from "@/app/otp-verification/page";
+import { useRouter } from "next/navigation";
 
 export enum Gender {
   MALE = "male",
@@ -48,6 +49,7 @@ const AuthRegister = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showOtpVerification, setShowOtpVerification] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const router = useRouter();
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -84,13 +86,13 @@ const AuthRegister = () => {
 
       // Store email and show OTP verification
       setRegisteredEmail(data.email);
-      setShowOtpVerification(true);
 
       setSnackbar({
         open: true,
         message: "Registration successful! Please verify your email.",
         severity: "success",
       });
+      router.push("/otp-verification");
     } catch (error: any) {
       setSnackbar({
         open: true,
@@ -98,17 +100,6 @@ const AuthRegister = () => {
         severity: "error",
       });
     }
-  };
-
-  const handleOtpVerified = () => {
-    // Reset form and show success message
-    reset();
-    setShowOtpVerification(false);
-    setSnackbar({
-      open: true,
-      message: "Email verified successfully! You can now login.",
-      severity: "success",
-    });
   };
 
   const handleCancelOtp = () => {
@@ -125,17 +116,6 @@ const AuthRegister = () => {
   };
 
   const strength = password ? getPasswordStrength(password) : null;
-
-  // Show OTP verification screen if needed
-  if (showOtpVerification) {
-    return (
-      <OtpVerification
-        email={registeredEmail}
-        onVerified={handleOtpVerified}
-        onCancel={handleCancelOtp}
-      />
-    );
-  }
 
   return (
     <Box
