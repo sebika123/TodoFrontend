@@ -52,9 +52,11 @@ export default function OtpVerificationPage() {
 
   if (loading) {
     return (
-      <Container maxWidth="sm" sx={{ mt: 10, textAlign: "center" }}>
+      <Container
+        maxWidth="sm"
+        sx={{ mt: 10, textAlign: "center", minHeight: "100vh" }}
+      >
         <CircularProgress />
-        <Typography sx={{ mt: 2 }}>Loading...</Typography>
       </Container>
     );
   }

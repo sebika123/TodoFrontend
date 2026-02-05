@@ -78,13 +78,15 @@ const AuthRegister = () => {
 
   const onSubmit: SubmitHandler<RegisterFormInputs> = async (data) => {
     const { confirmPassword, ...payload } = data;
+
     try {
       const response = await axios.post(
         "http://localhost:3002/auth/register",
         payload
       );
 
-      // Store email and show OTP verification
+      console.log("REGISTER RESPONSE:", response.data);
+
       setRegisteredEmail(data.email);
 
       setSnackbar({
@@ -92,8 +94,12 @@ const AuthRegister = () => {
         message: "Registration successful! Please verify your email.",
         severity: "success",
       });
+
+      localStorage.setItem("pendingVerificationEmail", data.email);
       router.push("/otp-verification");
     } catch (error: any) {
+      console.error("REGISTER ERROR:", error);
+
       setSnackbar({
         open: true,
         message: error.response?.data?.message || error.message,
