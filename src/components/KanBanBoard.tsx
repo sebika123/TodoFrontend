@@ -23,45 +23,83 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 interface Task {
-  id: number;
+  id: string;
   title: string;
   description: string;
   status: "todo" | "progress" | "done";
+  createdAt: string;
 }
 
-export default function KanbanBoard() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+interface KanbanBoardProps {
+  tasks: Task[];
+  onTaskCreate: (title: string, description: string) => Promise<void>;
+  onTaskUpdate: (id: string, status: string) => Promise<void>;
+  onTaskDelete: (id: string) => Promise<void>;
+}
+
+export default function KanbanBoard({
+  tasks,
+  onTaskCreate,
+  onTaskUpdate,
+  onTaskDelete,
+}: KanbanBoardProps) {
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTask, setNewTask] = useState({ title: "", description: "" });
 
-  const addTask = () => {
+  const addTask = async () => {
     if (newTask.title.trim() === "") return;
 
-    const task: Task = {
-      id: Date.now(),
-      title: newTask.title,
-      description: newTask.description,
-      status: "todo",
-    };
-
-    setTasks([...tasks, task]);
-    setNewTask({ title: "", description: "" });
-    setIsAddingTask(false);
+    try {
+      await onTaskCreate(newTask.title, newTask.description);
+      setNewTask({ title: "", description: "" });
+      setIsAddingTask(false);
+    } catch (error) {
+      console.error("Failed to create task:", error);
+    }
   };
 
-  const moveTask = (
-    taskId: number,
-    newStatus: "todo" | "progress" | "done"
-  ) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === taskId ? { ...task, status: newStatus } : task
-      )
-    );
+  const handleMoveForward = async (task: Task) => {
+    let newStatus: string;
+
+    if (task.status === "todo") {
+      newStatus = "progress";
+    } else if (task.status === "progress") {
+      newStatus = "done";
+    } else {
+      return; // Already at the end
+    }
+
+    try {
+      await onTaskUpdate(task.id, newStatus);
+    } catch (error) {
+      console.error("Failed to update task status:", error);
+    }
   };
 
-  const deleteTask = (taskId: number) => {
-    setTasks(tasks.filter((task) => task.id !== taskId));
+  const handleMoveBackward = async (task: Task) => {
+    let newStatus: string;
+
+    if (task.status === "done") {
+      newStatus = "progress";
+    } else if (task.status === "progress") {
+      newStatus = "todo";
+    } else {
+      return; // Already at the beginning
+    }
+
+    try {
+      await onTaskUpdate(task.id, newStatus);
+    } catch (error) {
+      console.error("Failed to update task status:", error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await onTaskDelete(id);
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+    }
   };
 
   const getTasksByStatus = (status: "todo" | "progress" | "done") => {
@@ -78,6 +116,7 @@ export default function KanbanBoard() {
     color: string;
   }) => {
     const columnTasks = getTasksByStatus(status);
+    console.log("🚀 ~ Column ~ columnTasks:", columnTasks);
 
     return (
       <Box
@@ -126,10 +165,17 @@ export default function KanbanBoard() {
                   {task.title}
                 </Typography>
                 {task.description && (
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 1 }}
+                  >
                     {task.description}
                   </Typography>
                 )}
+                <Typography variant="caption" color="text.secondary">
+                  Created: {new Date(task.createdAt).toLocaleDateString()}
+                </Typography>
               </CardContent>
               <CardActions
                 sx={{ justifyContent: "space-between", px: 2, pb: 2 }}
@@ -139,12 +185,7 @@ export default function KanbanBoard() {
                     <Button
                       size="small"
                       startIcon={<ArrowBackIcon />}
-                      onClick={() =>
-                        moveTask(
-                          task.id,
-                          status === "progress" ? "todo" : "progress"
-                        )
-                      }
+                      onClick={() => handleMoveBackward(task)}
                       variant="outlined"
                     >
                       Back
@@ -154,12 +195,7 @@ export default function KanbanBoard() {
                     <Button
                       size="small"
                       endIcon={<ArrowForwardIcon />}
-                      onClick={() =>
-                        moveTask(
-                          task.id,
-                          status === "todo" ? "progress" : "done"
-                        )
-                      }
+                      onClick={() => handleMoveForward(task)}
                       variant="contained"
                     >
                       {status === "todo" ? "Start" : "Complete"}
@@ -169,7 +205,7 @@ export default function KanbanBoard() {
                 <IconButton
                   size="small"
                   color="error"
-                  onClick={() => deleteTask(task.id)}
+                  onClick={() => handleDelete(task.id)}
                 >
                   <DeleteIcon />
                 </IconButton>
@@ -216,7 +252,6 @@ export default function KanbanBoard() {
         </Button>
       </Box>
 
-      {/* Add Task Dialog */}
       <Dialog
         open={isAddingTask}
         onClose={() => {
@@ -274,7 +309,6 @@ export default function KanbanBoard() {
         </DialogActions>
       </Dialog>
 
-      {/* Kanban Board */}
       <Box sx={{ display: "flex", gap: 3, overflowX: "auto" }}>
         <Column title="TO DO" status="todo" color="#9e9e9e" />
         <Column title="IN PROGRESS" status="progress" color="#2196f3" />

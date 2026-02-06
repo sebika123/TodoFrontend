@@ -4,57 +4,116 @@ import {
   Container,
   Box,
   Typography,
-  Grid,
-  Card,
-  CardContent,
   AppBar,
   Toolbar,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import React from "react";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import SpeedIcon from "@mui/icons-material/Speed";
-import CloudSyncIcon from "@mui/icons-material/CloudSync";
-import SecurityIcon from "@mui/icons-material/Security";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import MenuIcon from "@mui/icons-material/Menu";
 import KanbanBoard from "./KanBanBoard";
+
+const LIST_ALL_TASKS = gql`
+  query {
+    listAllTask {
+      id
+      title
+      description
+      status
+      createdAt
+    }
+  }
+`;
+
+const CREATE_TASKS = gql`
+  mutation CreateTask($input: CreateTaskDto!) {
+    createTask(input: $input) {
+      id
+      title
+      description
+      status
+      createdAt
+    }
+  }
+`;
+
+const UPDATE_TASK_STATUS = gql`
+  mutation UpdateTaskStatus($id: String!, $status: String!) {
+    updateTaskStatus(id: $id, status: $status) {
+      id
+      title
+      status
+    }
+  }
+`;
+
+const DELETE_TASK = gql`
+  mutation DeleteTask($id: String!) {
+    deleteTask(id: $id) {
+      id
+    }
+  }
+`;
 
 const HomePage = () => {
   const { data: session } = useSession();
   const router = useRouter();
 
-  const features = [
-    {
-      icon: <CheckCircleOutlineIcon sx={{ fontSize: 48, color: "#667eea" }} />,
-      title: "Easy Task Management",
-      description:
-        "Create, organize, and complete tasks with our intuitive interface designed for productivity.",
-    },
-    {
-      icon: <SpeedIcon sx={{ fontSize: 48, color: "#667eea" }} />,
-      title: "Lightning Fast",
-      description:
-        "Experience blazing fast performance with instant updates and seamless interactions.",
-    },
-    {
-      icon: <CloudSyncIcon sx={{ fontSize: 48, color: "#667eea" }} />,
-      title: "Cloud Sync",
-      description:
-        "Access your tasks anywhere, anytime. Your data syncs across all your devices instantly.",
-    },
-    {
-      icon: <SecurityIcon sx={{ fontSize: 48, color: "#667eea" }} />,
-      title: "Secure & Private",
-      description:
-        "Your data is encrypted and secure. We prioritize your privacy above everything else.",
-    },
-  ];
+  const { data, loading, error, refetch } = useQuery(LIST_ALL_TASKS);
+  const [createTasks] = useMutation(CREATE_TASKS);
+  const [updateTaskStatus] = useMutation(UPDATE_TASK_STATUS);
+  const [deleteTask] = useMutation(DELETE_TASK);
+
+  const createNewTask = async (title: string, description: string) => {
+    try {
+      await createTasks({
+        variables: {
+          input: {
+            title,
+            description,
+          },
+        },
+      });
+      refetch();
+    } catch (err) {
+      console.error("Error creating task:", err);
+    }
+  };
+
+  const updateTask = async (id: string, newStatus: string) => {
+    try {
+      await updateTaskStatus({
+        variables: {
+          id,
+          status: newStatus,
+        },
+      });
+      refetch();
+    } catch (err) {
+      console.error("Error updating task status:", err);
+    }
+  };
+
+  const removeTask = async (id: string) => {
+    try {
+      await deleteTask({
+        variables: { id },
+      });
+      refetch();
+    } catch (err) {
+      console.error("Error deleting task:", err);
+    }
+  };
+
+  if (error) {
+    console.error("Error fetching tasks:", error);
+  }
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      {/* Navbar */}
       <AppBar
         position="sticky"
         sx={{
@@ -128,7 +187,6 @@ const HomePage = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Hero Section */}
       <Box
         sx={{
           background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
@@ -138,11 +196,34 @@ const HomePage = () => {
         }}
       >
         <Container maxWidth="xl">
-          <KanbanBoard />
+          {loading ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "400px",
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          ) : error ? (
+            <Box sx={{ textAlign: "center", py: 4 }}>
+              <Typography variant="h6" color="error">
+                Error loading tasks. Please try again.
+              </Typography>
+            </Box>
+          ) : (
+            <KanbanBoard
+              tasks={data?.listAllTask || []}
+              onTaskCreate={createNewTask}
+              onTaskUpdate={updateTask}
+              onTaskDelete={removeTask}
+            />
+          )}
         </Container>
       </Box>
 
-      {/* Footer */}
       <Box
         component="footer"
         sx={{
