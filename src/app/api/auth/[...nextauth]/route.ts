@@ -28,12 +28,12 @@ export const authOptions = {
           return null;
         }
 
-        // ✅ Return normalized user object
+      
         return {
-          id: data.user.id,              // or data.user._id
+          id: data.user.id,             
           email: data.user.email,
           name: data.user.name,
-          accessToken: data.access_token,  // 👈 very important
+          accessToken: data.access_token,  
         };
       },
     }),
@@ -49,7 +49,7 @@ export const authOptions = {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
-        token.accessToken = user.accessToken; // 👈 store JWT
+        token.accessToken = user.accessToken;
       }
       return token;
     },
