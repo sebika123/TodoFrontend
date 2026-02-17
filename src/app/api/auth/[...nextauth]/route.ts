@@ -12,49 +12,65 @@ export const authOptions = {
       async authorize(credentials) {
         if (!credentials) return null;
 
-        try {
-          const res = await fetch("http://localhost:3002/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password,
-            }),
-          });
+        const res = await fetch("http://localhost:3002/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: credentials.email,
+            password: credentials.password,
+          }),
+        });
 
-          const user = await res.json();
+        const data = await res.json();
 
-          if (!res.ok || !user) {
-            console.log("Login failed:", user);
-            return null; // next-auth will redirect to error page
-          }
-
-          return user; // this object will be saved in session
-        } catch (err) {
-          console.error(err);
+        if (!res.ok || !data?.access_token) {
+          console.error("Login failed:", data);
           return null;
         }
+
+        // ✅ Return normalized user object
+        return {
+          id: data.user.id,              // or data.user._id
+          email: data.user.email,
+          name: data.user.name,
+          accessToken: data.access_token,  // 👈 very important
+        };
       },
     }),
   ],
+
   session: {
     strategy: "jwt",
   },
+
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.user = user; // store the entire response in JWT
+        token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
+        token.accessToken = user.accessToken; // 👈 store JWT
       }
       return token;
     },
+
     async session({ session, token }) {
-      session.user = token.user; // expose it in session
+      session.user.id = token.id;
+      session.user.email = token.email;
+      session.user.name = token.name;
+
+      // 👇 expose token to frontend
+      (session as any).accessToken = token.accessToken;
+
       return session;
     },
   },
+
   pages: {
     signIn: "/login",
   },
+
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
 const handler = NextAuth(authOptions);
